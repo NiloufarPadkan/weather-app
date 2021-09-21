@@ -7,6 +7,7 @@
 // });
 const https = require("https");
 const chalk = require("chalk");
+const forcast = require("/Users/Niloufar/nodejsproject/weather/forcast");
 const { argv } = require("yargs");
 const yargs = require("yargs");
 let city = "rasht";
@@ -43,7 +44,8 @@ function findWeather(myCity) {
         let weather = JSON.parse(data).weather[0];
         let temp = parseInt(JSON.parse(data).main.temp) - 273.15;
         console.log(
-          chalk.yellow.inverse("\ntody weather : \n") +
+          JSON.parse(data).name +
+            chalk.yellow.inverse("\ntody weather : \n") +
             weather.main +
             chalk.magenta.inverse("\n\ndescription : \n") +
             weather.description +
@@ -56,26 +58,23 @@ function findWeather(myCity) {
       console.log("Error: " + err.message);
     });
 }
-function findPlace() {
-  const placeUrl =
-    "https://api.mapbox.com/geocoding/v5/mapbox.places/Los%20Angles.json?worldview=cn&access_token=pk.eyJ1Ijoibmlsb3VmYXJwZGsiLCJhIjoiY2t0dDNkdjZhMTlsYzJ2bnF6YXo0NGo0NCJ9.WUWqa4Ie-Ay6jg2E3RElug&limit=1";
+function findPlace(place) {
+  const placeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${place}.json?worldview=cn&access_token=pk.eyJ1Ijoibmlsb3VmYXJwZGsiLCJhIjoiY2t0dDNkdjZhMTlsYzJ2bnF6YXo0NGo0NCJ9.WUWqa4Ie-Ay6jg2E3RElug&limit=1`;
   https
     .get(placeUrl, (resp) => {
       let data = "";
-
-      // A chunk of data has been received.
       resp.on("data", (chunk) => {
         data += chunk;
       });
-
-      // The whole response has been received. Print out the result.
       resp.on("end", () => {
-        //  console.log(JSON.parse(data).main.temp);
         let place = JSON.parse(data);
 
         const latitude = place.features[0].center[0];
         const longitude = place.features[0].center[1];
         console.log(latitude, longitude);
+        forcast(longitude, latitude, (data) => {
+          console.log(data);
+        });
       });
     })
     .on("error", (err) => {
@@ -83,4 +82,6 @@ function findPlace() {
     });
 }
 yargs.parse();
-findPlace();
+if (!process.argv[2]) {
+  console.log("please provide an address");
+} else findPlace(process.argv[2]);
